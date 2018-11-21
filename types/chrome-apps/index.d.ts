@@ -1,6 +1,6 @@
 // Type definitions for Chrome packaged application development
 // Project: http://developer.chrome.com/apps/
-// Definitions by: Nikolai Ommundsen <https://github.com/niikoo>, Adam Lay <https://github.com/AdamLay>, MIZUNE Pine <https://github.com/pine613>, MIZUSHIMA Junki <https://github.com/mzsm>, Ingconst Stepanyan <https://github.com/RReverser>, Adam Pyle <https://github.com/pyle>, Matthew Kimber <https://github.com/matthewkimber>, otiai10 <https://github.com/otiai10>, couven92 <https://github.com/couven92>, RReverser <https://github.com/rreverser>, sreimer15 <https://github.com/sreimer15>
+// Definitions by: Nikolai Ommundsen <https://github.com/niikoo>, Adam Lay <https://github.com/AdamLay>, MIZUNE Pine <https://github.com/pine613>, MIZUSHIMA Junki <https://github.com/mzsm>, Ingconst Stepanyan <https://github.com/RReverser>, Adam Pyle <https://github.com/pyle>, Matthew Kimber <https://github.com/matthewkimber>, otiai10 <https://github.com/otiai10>, couven92 <https://github.com/couven92>, RReverser <https://github.com/rreverser>, sreimer15 <https://github.com/sreimer15>, Omer <https://github.com/meshuamam>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.8
 
@@ -2437,13 +2437,26 @@ declare namespace chrome {
      * @requires Permissions: 'desktopCapture'
      */
     namespace desktopCapture {
+
+        interface ChooseDesktopMediaOptions {
+            /**
+             * if "audio" is included in parameter sources, and the end user does not uncheck the "Share audio" checkbox.
+             * Otherwise false, and in this case, one should not ask for audio stream through getUserMedia call.
+             */
+            canRequestAudioTrack?: boolean
+        }
+
         const DesktopCaptureSourceType: {
             SCREEN: 'screen',
             WINDOW: 'window',
             TAB: 'tab',
             AUDIO: 'audio'
-        }
+        };
 
+        /**
+         * @param targetTab Optional. Tab for which the stream is created. If not specified then the resulting stream can be used only by the calling extension. The stream can only be used by frames in the given tab whose security origin matches tab.url. The tab's origin must be a secure origin, e.g. HTTPS.
+         */
+        function chooseDesktopMedia(sources: ToStringLiteral<typeof DesktopCaptureSourceType>[], targetTab: chrome.tabs.Tab, callback: (streamId: string, options?: ChooseDesktopMediaOptions) => void): integer;
         /**
          * Shows desktop media picker UI with the specified set of sources.
          * @param sources Set of sources that should be shown to the user.
@@ -2452,7 +2465,7 @@ declare namespace chrome {
          *                 The created streamId can be used only once and expires after a few seconds when it is not used.
          * @return Request ID to be used by cancelChooseDesktopMedia
          */
-        function chooseDesktopMedia(sources: ToStringLiteral<typeof DesktopCaptureSourceType>[], callback: (streamId: string) => void): integer;
+        function chooseDesktopMedia(sources: ToStringLiteral<typeof DesktopCaptureSourceType>[], callback: (streamId: string, options?: ChooseDesktopMediaOptions) => void): integer;
 
         /**
          * Hides desktop media picker dialog shown by chooseDesktopMedia().
@@ -9907,6 +9920,142 @@ declare namespace chrome {
     }
 
     // #endregion chrome.system.*
+
+    // #region chrome.tabs
+    //////////
+    // Tabs //
+    //////////
+    /**
+     * Use the chrome.tabs API to interact with the browser's tab system. You can use this API to create, modify, and rearrange tabs in the browser.
+     * Permissions: 'tabs'. Most actions do not require a permission
+     * @since Chrome 27.
+     */
+    namespace tabs {
+
+        enum MutedInfoReason {
+            /** A user input action has set/overridden the muted state. **/
+            user = 'user',
+            /** Tab capture started, forcing a muted state change. **/
+            capture = 'capture',
+            /** An extension, identified by the extensionId field, set the muted state. **/
+            extension = 'extension',
+        }
+
+        /**
+         * Tab muted state and the reason for the last state change.
+         * @since Chrome 46.
+         */
+        export interface MutedInfo {
+            /** Whether the tab is muted (prevented from playing sound). The tab may be muted even if it has not played or is not currently playing sound. Equivalent to whether the 'muted' audio indicator is showing. */
+            muted: boolean;
+            /**
+             * Optional.
+             * The reason the tab was muted or unmuted. Not set if the tab's mute state has never been changed.
+             */
+            reason?: MutedInfoReason;
+            /**
+             * Optional.
+             * The ID of the extension that changed the muted state. Not set if an extension was not the reason the muted state last changed.
+             */
+            extensionId?: string;
+        }
+
+        export interface Tab {
+
+            /**
+             * Optional.
+             * Either loading or complete.
+             */
+            status?: string;
+            /** The zero-based index of the tab within its window. */
+            index: number;
+            /**
+             * Optional.
+             * The ID of the tab that opened this tab, if any. This property is only present if the opener tab still exists.
+             */
+            openerTabId?: number;
+            /**
+             * Optional.
+             * The title of the tab. This property is only present if the extension's manifest includes the "tabs" permission.
+             */
+            title?: string;
+            /**
+             * Optional.
+             * The URL the tab is displaying. This property is only present if the extension's manifest includes the "tabs" permission.
+             */
+            url?: string;
+            /**
+             * Whether the tab is pinned.
+             */
+            pinned: boolean;
+            /**
+             * Whether the tab is highlighted.
+             */
+            highlighted: boolean;
+            /** The ID of the window the tab is contained within. */
+            windowId: number;
+            /**
+             * Whether the tab is active in its window. (Does not necessarily mean the window is focused.)
+             */
+            active: boolean;
+            /**
+             * Optional.
+             * The URL of the tab's favicon. This property is only present if the extension's manifest includes the "tabs" permission. It may also be an empty string if the tab is loading.
+             */
+            favIconUrl?: string;
+            /**
+             * Optional.
+             * The ID of the tab. Tab IDs are unique within a browser session. Under some circumstances a Tab may not be assigned an ID, for example when querying foreign tabs using the sessions API, in which case a session ID may be present. Tab ID can also be set to chrome.tabs.TAB_ID_NONE for apps and devtools windows.
+             */
+            id?: number;
+            /** Whether the tab is in an incognito window. */
+            incognito: boolean;
+            /**
+             * Whether the tab is selected.
+             * @deprecated since Chrome 33. Please use tabs.Tab.highlighted.
+             */
+            selected: boolean;
+            /**
+             * Optional.
+             * Whether the tab has produced sound over the past couple of seconds (but it might not be heard if also muted). Equivalent to whether the speaker audio indicator is showing.
+             * @since Chrome 45.
+             */
+            audible?: boolean;
+            /**
+             * Whether the tab is discarded. A discarded tab is one whose content has been unloaded from memory, but is still visible in the tab strip. Its content gets reloaded the next time it's activated.
+             * @since Chrome 54.
+             */
+            discarded: boolean;
+            /**
+             * Whether the tab can be discarded automatically by the browser when resources are low.
+             * @since Chrome 54.
+             */
+            autoDiscardable: boolean;
+            /**
+             * Optional.
+             * Current tab muted state and the reason for the last state change.
+             * @since Chrome 46.
+             */
+            mutedInfo?: MutedInfo;
+            /**
+             * Optional. The width of the tab in pixels.
+             * @since Chrome 31.
+             */
+            width?: number;
+            /**
+             * Optional. The height of the tab in pixels.
+             * @since Chrome 31.
+             */
+            height?: number;
+            /**
+             * Optional. The session ID used to uniquely identify a Tab obtained from the sessions API.
+             * @since Chrome 31.
+             */
+            sessionId?: string;
+        }
+    }
+
+    // #endregion chrome.tabs
 
     // #region chrome.tts
     ////////////////////

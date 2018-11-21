@@ -764,6 +764,23 @@ chrome.contextMenus.onClicked.addListener((info) => {
 
 // #region chrome.desktopCapture
 
+function testChooseDesktopMediaWithTab() {
+
+    const testTab: chrome.tabs.Tab = {
+        index: 0,
+        pinned: false,
+        highlighted: false,
+        windowId: 0,
+        active: true,
+        incognito: false,
+        selected: false,
+        discarded: false,
+        autoDiscardable: false
+    };
+
+    chrome.desktopCapture.chooseDesktopMedia(['screen'], testTab, () => {});
+}
+
 chrome.desktopCapture.chooseDesktopMedia(['screen', 'window', 'tab'], () => { });
 chrome.desktopCapture.chooseDesktopMedia([chrome.desktopCapture.DesktopCaptureSourceType.AUDIO], () => { });
 
